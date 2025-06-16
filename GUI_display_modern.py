@@ -7,7 +7,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkVideoPlayer import TkinterVideo
 
 # Set theme
-ctk.set_appearance_mode("dark")  # Options: "light", "dark", "system"
+# ## --- MODIFIED --- ##: Changed appearance to "light"
+ctk.set_appearance_mode("light")  # Options: "light", "dark", "system"
 ctk.set_default_color_theme("blue")  # Options: "blue", "green", "dark-blue"
 
 # Define paths
@@ -29,8 +30,9 @@ class ImageViewerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Medical Image Viewer")
+        ## --- MODIFIED --- ##: Increased window size for better layout and set light blue background
         self.geometry("900x600")
-        self.configure(bg="#1e1e1e")
+        self.configure(bg="#e0f0ff")
 
         # Handle close event (Clicking 'X' button)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -40,14 +42,16 @@ class ImageViewerApp(ctk.CTk):
         self.current_img_name = selected_images[self.img_index]
 
         # Navigation Bar with Full-Width Logo
-        self.nav_frame = ctk.CTkFrame(self, corner_radius=25)
-        self.nav_frame.pack(pady=20, fill="x")
+        ## --- MODIFIED --- ##: Changed frame color to match the light theme
+        self.nav_frame = ctk.CTkFrame(self, corner_radius=15, fg_color="#cce5ff")
+        self.nav_frame.pack(pady=5, fill="x")
 
         self.prev_btn = ctk.CTkButton(self.nav_frame, text="⟨ Previous", command=self.previous_image)
         self.prev_btn.pack(side="left", padx=10, pady=5)
 
         # Full-width logo
-        self.logo_label = Label(self.nav_frame, bg="#1e1e1e")
+        ## --- MODIFIED --- ##: Changed label background color
+        self.logo_label = Label(self.nav_frame, bg="#cce5ff")
         self.logo_label.pack(side="left",fill="both", expand=True)
 
         self.next_btn = ctk.CTkButton(self.nav_frame, text="Next ⟩", command=self.next_image)
@@ -56,65 +60,93 @@ class ImageViewerApp(ctk.CTk):
         self.load_logo()
 
         # Video Player Section
-        self.video_frame = ctk.CTkFrame(self, corner_radius=25, fg_color="#1e1e1e")
-        # self.video_frame.pack(side="top",pady=30)
-        # self.video_player = TkinterVideo(master=self.video_frame, scaled=True)
-        # self.video_player.pack(fill="x", expand=True)
-        # self.video_player.config(width=800, height=450)  # <-- Added: Set a larger default size
-        self.video_frame.pack(side="top", pady=30, fill="both", expand=True)  # <-- Modified: Allow the frame to expand
+        self.video_frame = ctk.CTkFrame(self, corner_radius=15, fg_color="#e0f0ff")
+        self.video_frame.pack(side="top", pady=5, fill="both", expand=True)  # <-- Modified: Allow the frame to expand
         self.video_player = TkinterVideo(master=self.video_frame, scaled=True)
+        self.video_player.configure(bg="#e0f0ff")
         self.video_player.pack(fill="both", expand=True)  # <-- Modified: Allow video to expand fully
         self.video_player.config(width=300, height=250)  # <-- Added: Set a larger default size
         self.play_video(self.current_img_name)
 
-        # Feature Buttons
-        self.button_frame = ctk.CTkFrame(self, corner_radius=25)
-        self.button_frame.pack(pady=10)
+        ## --- ADDED --- ##: Added a text description for the video player
+        self.video_description = ctk.CTkLabel(self.video_frame, text="Otoscope videos collected from clinics.",
+                                              text_color="#333333", font=("Arial", 18))
+        self.video_description.pack(pady=5)
 
-        self.select_frame_btn = ctk.CTkButton(self.button_frame, text="Select Frame", command=self.show_image)
-        self.select_frame_btn.pack(side="left", padx=10, pady=5)
+        ## --- ADDED --- ##: This entire block is new. It creates a main frame for the features
+        ## to enable grid layout for proper alignment.
+        self.features_frame = ctk.CTkFrame(self, corner_radius=15, fg_color="#e0f0ff")
+        self.features_frame.pack(pady=5, padx=20, fill="both", expand=True)
+        self.features_frame.grid_columnconfigure((0, 1, 2, 3), weight=1) # Configure columns to be of equal width
+        
+        ## --- ADDED --- ##: A dedicated frame for the "Select Frame" button and its image label.
+        ## This ensures the button is directly above the label.
+        self.frame1 = ctk.CTkFrame(self.features_frame, fg_color="transparent")
+        self.frame1.grid(row=0, column=0, padx=10, pady=5, sticky="n")
+        self.select_frame_btn = ctk.CTkButton(self.frame1, text="Select Frame", command=self.show_image)
+        self.select_frame_btn.pack(pady=5)
+        ## --- MODIFIED/ADDED --- ##: Set a fixed size and placeholder color for the image label.
+        self.placeholder_img = ctk.CTkFrame(self.frame1, width=200, height=200, fg_color="#d0e0f0", corner_radius=10)
+        self.placeholder_img.pack()
+        self.placeholder_img.pack_propagate(False)
+        self.img_label = Label(self.placeholder_img, bg="#d0e0f0")
+        self.img_label.pack()
+        ## --- MODIFIED/ADDED--- ##: Set a Image description 
+        self.selecte_frame_description = ctk.CTkLabel(self.frame1, text="The AI picks the best frame for making a diagnosis here.",
+                                              text_color="#333333", font=("Arial", 16),wraplength=200, # Set a fixed width in pixels for wrapping
+                                                justify="center")
+        self.selecte_frame_description.pack(pady=5)
 
-        self.segmentation_btn = ctk.CTkButton(self.button_frame, text="Segmentation", command=self.show_mask)
-        self.segmentation_btn.pack(side="left", padx=10, pady=5)
+        ## --- ADDED --- ##: A dedicated frame for the "Segmentation" button and its image label.
+        self.frame2 = ctk.CTkFrame(self.features_frame, fg_color="transparent")
+        self.frame2.grid(row=0, column=1, padx=10, pady=5, sticky="n")
+        self.segmentation_btn = ctk.CTkButton(self.frame2, text="Segmentation", command=self.show_mask)
+        self.segmentation_btn.pack(pady=5)
+        ## --- MODIFIED/ADDED --- ##: Set a fixed size and placeholder color for the image label.
+        self.placeholder_seg = ctk.CTkFrame(self.frame2, width=200, height=200, fg_color="#d0e0f0", corner_radius=10)
+        self.placeholder_seg.pack()
+        self.placeholder_seg.pack_propagate(False)
+        self.segmentation_label = Label(self.placeholder_seg, bg="#d0e0f0")
+        self.segmentation_label.pack(fill="both", expand=True)
+        ## --- MODIFIED/ADDED--- ##: Set a Image description 
+        self.segmentation_description = ctk.CTkLabel(self.frame2, text="The AI is trying to pinpoint the exact area of the eardrum here.",
+                                              text_color="#333333", font=("Arial", 16),wraplength=200, # Set a fixed width in pixels for wrapping
+                                                justify="center")
+        self.segmentation_description.pack(pady=5)
 
-        self.diagnose_btn = ctk.CTkButton(self.button_frame, text="Diagnose", command=self.show_diagnose)
-        self.diagnose_btn.pack(side="left", padx=10, pady=5)
+        ## --- ADDED --- ##: A dedicated frame for the "Diagnose" button and its plot label.
+        self.frame3 = ctk.CTkFrame(self.features_frame, fg_color="transparent")
+        self.frame3.grid(row=0, column=2, padx=10, pady=5, sticky="n")
+        self.diagnose_btn = ctk.CTkButton(self.frame3, text="Diagnose", command=self.show_diagnose)
+        self.diagnose_btn.pack(pady=5)
+        ## --- MODIFIED/ADDED --- ##: Set a fixed size and placeholder color for the diagnosis plot label.
+        self.placeholder_diag = ctk.CTkFrame(self.frame3, width=200, height=200, fg_color="#d0e0f0", corner_radius=10)
+        self.placeholder_diag.pack()
+        self.placeholder_diag.pack_propagate(False)
+        self.diagnosis_label = Label(self.placeholder_diag, bg="#d0e0f0")
+        self.diagnosis_label.pack()
+        ## --- MODIFIED/ADDED--- ##: Set a Image description 
+        self.diagnosis_description = ctk.CTkLabel(self.frame3, text="The AI figures out which medical diagnosis is the most likely.",
+                                              text_color="#333333", font=("Arial", 16),wraplength=200, # Set a fixed width in pixels for wrapping
+                                                justify="center")
+        self.diagnosis_description.pack(pady=5)
 
-        self.gradcam_btn = ctk.CTkButton(self.button_frame, text="Grad-CAM", command=self.show_gradcam)
-        self.gradcam_btn.pack(side="left", padx=10, pady=5)
-
-        # Display Sections
-        self.image_display_frame = ctk.CTkFrame(self, corner_radius=10)
-        self.image_display_frame.pack(pady=10, fill="both", expand=True)
-        # Configure grid layout to evenly distribute labels
-        self.image_display_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)  # <-- Equal spacing
-
-        # Image Label
-        self.img_label = Label(self.image_display_frame, bg="#1e1e1e")
-        self.img_label.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")  # <-- Use grid & center
-
-        # Segmentation Label
-        self.segmentation_label = Label(self.image_display_frame, bg="#1e1e1e")
-        self.segmentation_label.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")  # <-- Centered in grid
-
-        # Diagnosis Label
-        self.diagnosis_label = Label(self.image_display_frame, bg="#1e1e1e")
-        self.diagnosis_label.grid(row=0, column=2, padx=10, pady=5, sticky="nsew")  # <-- Centered in grid
-
-        # Grad-CAM Label
-        self.gradcam_label = Label(self.image_display_frame, bg="#1e1e1e")
-        self.gradcam_label.grid(row=0, column=3, padx=10, pady=5, sticky="nsew")  # <-- Centered in grid
-        # self.img_label = Label(self.image_display_frame, bg="#1e1e1e")
-        # self.img_label.pack(side="left", padx=10, pady=5)
-
-        # self.segmentation_label = Label(self.image_display_frame, bg="#1e1e1e")
-        # self.segmentation_label.pack(side="left", padx=10, pady=5)
-
-        # self.diagnosis_label = Label(self.image_display_frame, bg="#1e1e1e")
-        # self.diagnosis_label.pack(side="left", padx=10, pady=5)
-
-        # self.gradcam_label = Label(self.image_display_frame, bg="#1e1e1e")
-        # self.gradcam_label.pack(side="left", padx=10, pady=5)
+        ## --- ADDED --- ##: A dedicated frame for the "Grad-CAM" button and its image label.
+        self.frame4 = ctk.CTkFrame(self.features_frame, fg_color="transparent")
+        self.frame4.grid(row=0, column=3, padx=10, pady=5, sticky="n")
+        self.gradcam_btn = ctk.CTkButton(self.frame4, text="Grad-CAM", command=self.show_gradcam)
+        self.gradcam_btn.pack(pady=5)
+        ## --- MODIFIED/ADDED --- ##: Set a fixed size and placeholder color for the image label.
+        self.placeholder_grad = ctk.CTkFrame(self.frame4, width=200, height=200, fg_color="#d0e0f0", corner_radius=10)
+        self.placeholder_grad.pack()
+        self.placeholder_grad.pack_propagate(False)
+        self.gradcam_label = Label(self.placeholder_grad, bg="#d0e0f0")
+        self.gradcam_label.pack(fill="both", expand=True)
+        ## --- MODIFIED/ADDED--- ##: Set a Image description 
+        self.gradcam_description = ctk.CTkLabel(self.frame4, text="The AI shows which areas it focused on to make this diagnosis, going from red to blue(most important to least important).",
+                                              text_color="#333333", font=("Arial", 16), wraplength=200, # Set a fixed width in pixels for wrapping
+                                                justify="center")
+        self.gradcam_description.pack(pady=5)
 
 
 
@@ -143,7 +175,7 @@ class ImageViewerApp(ctk.CTk):
                 self.video_player.load(video_path)
                 self.video_player.set_size((300, 250))  # Ensure size consistency
                 self.video_player.scale = True  # Force auto-scaling
-                self.video_player.configure(bg="#1e1e1e")  # <-- Ensure dark background
+                self.video_player.configure(bg="#e0f0ff")  # <-- Ensure dark background
                 self.video_player.play()
             except Exception as e:
                 print(f"Error loading video {video_path}: {e}")
@@ -182,7 +214,7 @@ class ImageViewerApp(ctk.CTk):
 
         # Define colors for each class
         class_colors = ['#FF9999', '#66B2FF', '#99FF99', '#FFCC99', '#FFD700']
-        fig, ax = plt.subplots(figsize=(3.5, 3.5))
+        fig, ax = plt.subplots(figsize=(3.5, 3.5), facecolor='#d0e0f0')
 
         bars = ax.barh(list(class_probs.keys()), list(class_probs.values()), color=class_colors, edgecolor='black')
 
